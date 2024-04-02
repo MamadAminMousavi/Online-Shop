@@ -1,0 +1,13 @@
+sequenceDiagram
+    Admin->>+Sign in: can sign into the account
+    Admin->>+Product : can view the products
+    Admin->>+Product : can CRUD the products
+    Admin->>+User : can view the users and CRUD
+    Admin->>+customer : can view the customer and CRUD
+    Admin->>+Order : can view the oreders and CRUD
+    Admin->>+Categories : can view the Categories and CRUD
+    Admin->>+Payment : can view the Payment details
+    Admin->>+Shipping Addresses : View list of all saved shipping addresses
+    Admin->>+Feedback  :View list of all customer feedback submissions
+    Admin->>+Admin Logs  :View log of all actions performed by administrators
+    
