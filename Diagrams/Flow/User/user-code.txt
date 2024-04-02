@@ -1,0 +1,14 @@
+flowchart TD
+    A[User]
+    A --> b{sign in}
+    b -->|yes|c(can see the product)
+    b -->|no| b
+    c --> d(can search the products)
+    d--> e(add the products to the cart )
+    e--> f(see all products in cart)
+    f--> G( can see the  parent Category and child Category)
+    G--> h(be able to remove the products from cart)
+    h--> i(View list of all saved shipping addresses)
+    i--> j(select the payment)
+    j--> K(payment process)
+    
