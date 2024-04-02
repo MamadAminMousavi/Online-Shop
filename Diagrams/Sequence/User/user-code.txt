@@ -1,0 +1,8 @@
+sequenceDiagram
+    Customer->>+Sign in: can sign into an account
+      Customer->>+ Product: can saerch products
+      Customer->>+ Product: add the products to the cart
+      Customer->>+ Cart: see all products in cart
+      Customer->>+ Cart: be able to remove the products
+      Customer->>+ Cart: Sellect the payment
+      Cart->>+ Payment: pay process
