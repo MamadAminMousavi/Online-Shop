@@ -1,0 +1,90 @@
+erDiagram
+    customer ||--o{ Product : oneToMany
+    customer ||--o{ Feedback : ManyToOne
+    customer {
+        INT customer_id
+        VARCHAR(50) username
+        VARCHAR(100) email
+        VARCHAR(15) phone_number
+        DATE registration_date
+    }
+    Product ||--o{ Orders : ManyToMany
+    Product {
+        INT product_id
+        VARCHAR(100) name 
+        TEXT description
+        DECIMAL(2-10) price
+        INT category_id
+    }
+    Orders ||--o{ Order-Details : OneToOne
+    Orders ||--o{ customer : ManyToOne  
+    Orders {
+        INT order_id 
+        INT customer_id 
+        DATETIME order_date
+        DECIMAL(2-10) total_amount
+        VARCHAR(20)  status 
+    }
+    Order-Details ||--o{ Product : ManyToMany
+    Order-Details {
+        INT order_detail_id
+        INT order_id 
+        INT product_id 
+        INT quantity
+        DECIMAL(2-10) unit_price
+    }
+    Categories ||--o{ Product : ManyToOne
+    Categories {
+        INT category_id 
+        VARCHAR(50) name 
+        TEXT description 
+        INT parent_category_id 
+        DATETIME  created_at
+    }
+    Users ||--o{ customer : OneToOne
+    Users {
+        INT user_id 
+        VARCHAR(50) username  
+        VARCHAR(100) password_hash
+        VARCHAR(100) email 
+        VARCHAR(20) role 
+    }
+    Payments ||--o{ Orders : OneToOne
+    Payments {
+        INT payment_id
+        INT order_id  
+        VARCHAR(50) payment_method 
+        DECIMAL(10-2) amount 
+        DATETIME payment_date  
+    }
+    Shipping-Addresses ||--o{ customer : ManyToOne
+    Shipping-Addresses {
+        INT address_id
+        INT customer_id  
+        VARCHAR(100) recipient_name 
+        VARCHAR(255) address_line1 
+        VARCHAR(255) address_line2
+        VARCHAR(100) city
+        VARCHAR(100) state
+        VARCHAR(20) postal_code
+        VARCHAR(100) country
+    }
+    Feedback ||--o{ Product : OneToMany
+    Feedback ||--o{ Orders : OneToOne
+    Feedback {
+        INT feedback_id
+        INT customer_id  
+        INT order_id 
+        INT rating 
+        TEXT comment
+        DATETIME feedback_date
+    }
+    Admin-Logs ||--o{ Users : oneToMany
+    Admin-Logs {
+        INT log_id
+        INT user_id  
+        VARCHAR(100) action 
+        DATETIME action_date 
+        VARCHAR(50) ip_address
+    }
+    
