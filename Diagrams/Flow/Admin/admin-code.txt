@@ -1,0 +1,13 @@
+flowchart TD
+    A[admin]  
+    A --> b{sign in}
+    b -->|yes|c(can see the product and CRUD the products)
+    b -->|no| b
+    c --> d(can see the users and CRUD the users)
+    d--> e(can see the customer and CRUD )
+    e--> f(can see the order and its details)
+    f--> G( can see the  parent Category and child Category and  CRUD them)
+    G--> h(can see the payment and its details)
+    h--> i(View list of all saved shipping addresses)
+    i--> j(View list of all customer feedback submissions)
+    j--> K(View log of all actions performed by administrators)
