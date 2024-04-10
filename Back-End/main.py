@@ -754,9 +754,100 @@ def update_ShippingAddresses_by_id(id):
 #-------------------------------------------------
 
 
+#AdminLogs crud function
+def get_all_AdminLogs():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM AdminLogs')
+    AdminLogs = cur.fetchall()
+    final_AdminLogs = []
+    for AdminLog in AdminLogs:
+        final_AdminLogs.append({
+            "category_id": AdminLog[0],
+            "name": AdminLog[1],
+            "description": AdminLog[2],
+            "parent_category_id": AdminLog[3],
+            "created_at": AdminLog[4],
+        })
+    conn.close()
+    return final_AdminLogs
+
+def get_AdminLog(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM AdminLogs WHERE log_id = ?',(id,))
+    AdminLog = cur.fetchone()
+    conn.close()
+    final_AdminLog = {
+        "user_id": AdminLog[0],
+        "action": AdminLog[1],
+        "action_date": AdminLog[2],
+        "ip_address": AdminLog[3]
+        }
+    return final_AdminLog
+
+def create_AdminLog(user_id, action):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    created_at = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+    ipAddress = request.remote_addr
+    cur.execute('INSERT INTO AdminLogs (user_id, action,action_date,ip_address) VALUES (?, ?, ?, ?)', (user_id, action, created_at,ipAddress))
+    conn.commit()
+    conn.close()
+    return "ok"
+
+def delete_AdminLog(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM AdminLogs WHERE log_id = ?', (id,))
+    conn.commit()
+    conn.close()
+    
+def update_AdminLog(user_id, action,id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('UPDATE AdminLogs SET user_id = ?, action = ? WHERE log_id = ?', (user_id,action,id))
+    conn.commit()
+    conn.close()
+    return get_AdminLog(id)
+
+# category crud routes
+@app.route('/AdminLogs', methods=['GET'])
+def list_AdminLogs():
+    AdminLogs = get_all_AdminLogs()
+    response = jsonify(AdminLogs)
+    response.headers['Access-Control-Expose-Headers'] = 'Content-Range'
+    response.headers['Content-Range'] = len(AdminLogs)
+    return response
+
+@app.route('/AdminLog/<int:id>', methods=['GET'])
+def AdminLog(id):
+    AdminLog = get_AdminLog(id)
+    if AdminLog is None:
+        return '', 404
+    return jsonify(AdminLog), 200
+
+@app.route('/AdminLog', methods=['POST'])
+def add_AdminLog():
+    user_id = request.json['user_id']
+    action = request.json['action']
+    AdminLog_id = create_AdminLog(user_id, action)
+    return "ok", 201
+
+@app.route('/AdminLog/<int:id>', methods=['DELETE'])
+def delete_AdminLog_by_id(id):
+    delete_AdminLog(id)
+    return jsonify({"id":id}), 200
+
+@app.route('/AdminLog/<int:id>', methods=['PUT'])
+def update_AdminLog_by_id(id):
+    user_id = request.json['user_id']
+    action = request.json['action']
+    updated = update_AdminLog(user_id,action,id)
+    return jsonify(updated), 200
 
 
-
+#-------------------------------------------------
 
 if __name__ == '__main__':
     app.run(debug=True)
