@@ -639,6 +639,122 @@ def update_feedback_by_id(id):
 
 #-------------------------------------------------
 
+#ShippingAddresses crud function
+def get_all_ShippingAddresses():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM ShippingAddresses')
+    ShippingAddresses = cur.fetchall()
+    final_ShippingAddresses = []
+    for address in ShippingAddresses:
+        final_ShippingAddresses.append({
+            "address_id": address[0],
+            "customer_id": address[1],
+            "recipient_name": address[2],
+            "address_line1": address[3],
+            "address_line2": address[4],
+            "city": address[5],
+            "state": address[6],
+            "postal_code": address[7],
+            "country": address[8]
+        })
+    conn.close()
+    return final_ShippingAddresses
+
+def get_ShippingAddresses(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM ShippingAddresses WHERE address_id = ?',(id,))
+    ShippingAddresses = cur.fetchone()
+    conn.close()
+    final_ShippingAddresses = {
+            "address_id": ShippingAddresses[0],
+            "customer_id": ShippingAddresses[1],
+            "recipient_name": ShippingAddresses[2],
+            "address_line1": ShippingAddresses[3],
+            "address_line2": ShippingAddresses[4],
+            "city": ShippingAddresses[5],
+            "state": ShippingAddresses[6],
+            "postal_code": ShippingAddresses[7],
+            "country": ShippingAddresses[8]
+    }
+    return final_ShippingAddresses
+
+def create_ShippingAddresses(customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('INSERT INTO ShippingAddresses (customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country) VALUES (?, ?, ?, ?,?, ?, ?, ?)', (customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country))
+    conn.commit()
+    conn.close()
+    return "ok"
+
+def delete_ShippingAddresses(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM ShippingAddresses WHERE address_id = ?', (id,))
+    conn.commit()
+    conn.close()
+
+def update_ShippingAddresses(customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('UPDATE ShippingAddresses SET customer_id = ?, recipient_name = ?, address_line1 = ?, address_line2 = ? ,city = ?, state = ?, postal_code = ?, country = ? WHERE address_id = ?', (customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id))
+    conn.commit()
+    conn.close()
+    return get_ShippingAddresses(id)
+
+# ShippingAddresses routes
+@app.route('/shipAddress', methods=['GET'])
+def list_ShippingAddresses():
+    ShippingAddresses = get_all_ShippingAddresses()
+    response = jsonify(ShippingAddresses)
+    response.headers['Access-Control-Expose-Headers'] = 'Content-Range'
+    response.headers['Content-Range'] = len(ShippingAddresses)
+    return response
+
+@app.route('/shipAddress/<int:id>', methods=['GET'])
+def one_ShippingAddresses(id):
+    ShippingAddresses = get_ShippingAddresses(id)
+    if ShippingAddresses is None:
+        return '', 404
+    return jsonify(ShippingAddresses), 200
+
+@app.route('/shipAddress', methods=['POST'])
+def add_ShippingAddresses():
+    customer_id = request.json['customer_id']
+    recipient_name = request.json['recipient_name']
+    address_line1 = request.json['address_line1']
+    address_line2 = request.json['address_line2']
+    city = request.json['city']
+    state = request.json['state']
+    postal_code = request.json['postal_code']
+    country = request.json['country']
+    ShippingAddresses_id = create_ShippingAddresses(customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country)
+    return "ok", 201
+
+@app.route('/shipAddress/<int:id>', methods=['DELETE'])
+def delete_ShippingAddresses_by_id(id):
+    delete_ShippingAddresses(id)
+    return jsonify({"id":id}), 200
+
+@app.route('/shipAddress/<int:id>', methods=['PUT'])
+def update_ShippingAddresses_by_id(id):
+    customer_id = request.json['customer_id']
+    recipient_name = request.json['recipient_name']
+    address_line1 = request.json['address_line1']
+    address_line2 = request.json['address_line2']
+    city = request.json['city']
+    state = request.json['state']
+    postal_code = request.json['postal_code']
+    country = request.json['country']
+    updated = update_ShippingAddresses(customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id)
+    return jsonify(updated), 200
+
+
+#-------------------------------------------------
+
+
+
 
 
 
