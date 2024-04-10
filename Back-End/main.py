@@ -2,6 +2,7 @@ from flask import Flask, jsonify , request
 import sqlite3
 from flask_cors import CORS, cross_origin
 import io
+import psycopg2
 from datetime import datetime
 from fileinput import filename 
 
@@ -332,6 +333,208 @@ def update_order_by_id(order_id):
 
 
 #-------------------------------------------------
+
+
+#payment crud function
+def get_all_payments():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM Payments')
+    payments = cur.fetchall()
+    final_payments = []
+    for payment in payments:
+        final_payments.append({
+            "payment_id": payment[0],
+            "order_id": payment[1],
+            "payment_method": payment[2],
+            "amount": payment[3],
+            "payment_date": payment[4]
+        })
+    conn.close()
+    return final_payments
+
+def create_payment(order_id, payment_method, amount):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute('INSERT INTO Payments (order_id, payment_method, amount, payment_date) VALUES (?, ?, ?, ?)', (order_id, payment_method, amount, current_datetime))
+    conn.commit()
+    conn.close()
+    return "ok"
+
+def get_payment(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM Payments WHERE payment_id = ?', (id,))
+    payment = cur.fetchone()
+    conn.close()
+    if payment is None:
+        return None  
+    return {
+        "payment_id": payment[0],
+        "order_id": payment[1],
+        "payment_method": payment[2],
+        "amount": payment[3],
+        "payment_date": payment[4].strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+def delete_payment(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM Payments WHERE payment_id = ?', (id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Payment deleted successfully" if cur.rowcount > 0 else "Payment not found"})
+
+def update_payment(id, order_id, payment_method, amount):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('UPDATE Payments SET order_id = ?, payment_method = ?, amount = ? WHERE payment_id = ?', (order_id, payment_method, amount, id))
+    conn.commit()
+    conn.close()
+    return get_payment(id)
+
+
+#payment crud routes
+@app.route('/payments', methods=['GET'])
+def get_all_payments():
+    payments = get_all_payments()
+    return jsonify(payments)
+
+@app.route('/payments', methods=['POST'])
+def create_payment():
+    data = request.get_json()
+    order_id = data['order_id']
+    payment_method = data['payment_method']
+    amount = data['amount']
+    result = create_payment(order_id, payment_method, amount)
+    return jsonify({"message": result})
+
+@app.route('/payments/<int:payment_id>', methods=['GET'])
+def get_payment(payment_id):
+    payment = get_payment(payment_id)
+    if payment is None:
+        return jsonify({"message": "Payment not found"})
+    return jsonify(payment)
+
+@app.route('/payments/<int:payment_id>', methods=['DELETE'])
+def delete_payment(payment_id):
+    result = delete_payment(payment_id)
+    return jsonify(result)
+
+@app.route('/payments/<int:payment_id>', methods=['PUT'])
+def update_payment(payment_id):
+    data = request.get_json()
+    order_id = data['order_id']
+    payment_method = data['payment_method']
+    amount = data['amount']
+    payment = update_payment(payment_id, order_id, payment_method, amount)
+    return jsonify(payment)
+
+
+#-------------------------------------------------
+
+
+#order-detail crud function
+def get_all_orderDetail():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM OrderDetails')
+    details = cur.fetchall()
+    final_details = []
+    for detail in details:
+        final_details.append({
+            "order_detail_id": detail[0],
+            "order_id": detail[1],
+            "product_id": detail[2],
+            "quantity": detail[3],
+            "unit_price": detail[4],
+        })
+    conn.close()
+    return final_details
+
+def get_details(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM OrderDetails WHERE order_detail_id = ?',(id,))
+    detail = cur.fetchone()
+    conn.close()
+    final_details = {
+            "order_detail_id": detail[0],
+            "order_id": detail[1],
+            "product_id": detail[2],
+            "quantity": detail[3],
+            "unit_price": detail[4],
+    }
+    return final_details
+
+def create_detail(order_id, product_id,quantity,unit_price):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('INSERT INTO OrderDetails (order_id,product_id,quantity,unit_price) VALUES (?, ?, ?,?)', (order_id,product_id,quantity,unit_price,))
+    conn.commit()
+    conn.close()
+    return "ok"
+
+def delete_detail(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM OrderDetails WHERE order_detail_id = ?', (id,))
+    conn.commit()
+    conn.close()
+    
+def update_detail(order_id, product_id,quantity,unit_price,id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('UPDATE OrderDetails SET order_id = ?, product_id = ?, quantity = ?, unit_price = ? WHERE order_detail_id = ?', (order_id, product_id,quantity,unit_price,id))
+    conn.commit()
+    conn.close()
+    return get_details(id)
+
+
+# order-detail routes
+@app.route('/details', methods=['GET'])
+def list_details():
+    details = get_all_orderDetail()
+    response = jsonify(details)
+    response.headers['Access-Control-Expose-Headers'] = 'Content-Range'
+    response.headers['Content-Range'] = len(details)
+    return response
+
+@app.route('/detail/<int:id>', methods=['GET'])
+def detail(id):
+    detail = get_details(id)
+    if detail is None:
+        return '', 404
+    return jsonify(detail), 200
+
+@app.route('/newDetail', methods=['POST'])
+def add_details():
+    order_id = request.json['order_id']
+    product_id = request.json['product_id']
+    quantity = request.json['quantity']
+    unit_price = request.json['unit_price']
+    detail_id = create_detail(order_id, product_id, quantity,unit_price)
+    return "ok", 201
+
+@app.route('/delDetail/<int:id>', methods=['DELETE'])
+def delete_detail_by_id(id):
+    delete_detail(id)
+    return jsonify({"id":id}), 200
+
+@app.route('/upDetail/<int:id>', methods=['PUT'])
+def update_detail_by_id(id):
+    order_id = request.json['order_id']
+    product_id = request.json['product_id']
+    quantity = request.json['quantity']
+    unit_price = request.json['unit_price']
+    updated = update_detail(order_id, product_id, quantity,unit_price,id)
+    return jsonify(updated), 200
+
+
+#-------------------------------------------------
+
+
 
 
 if __name__ == '__main__':
