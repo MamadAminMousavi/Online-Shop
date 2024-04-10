@@ -4,7 +4,8 @@ from flask_cors import CORS, cross_origin
 import io
 import psycopg2
 from datetime import datetime
-from fileinput import filename 
+from fileinput import filename
+from hashlib import md5 
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -62,15 +63,19 @@ def get_users(users_id):
         }
     conn.close()
     return final_users
-def create_user(username, password_hash,email,phone_number, role,default_shipping_address):
+
+def create_user(Name, password_hash, email, phone_number, Role,address):
     conn = get_db_connection()
     cur = conn.cursor()
-    registration_date = datetime.today().strftime('%Y-%m-%d')
-    cur.execute('INSERT INTO Users (username, password_hash,email,phone_number,registration_date,role,default_shipping_address) VALUES (?, ?, ?, ? , ?, ?, ?)', (username, password_hash,email,phone_number,registration_date, role,default_shipping_address))
+    password_hash = md5(str(password_hash).encode()).hexdigest()
+    registration_date = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+    cur.execute('INSERT INTO Users (username, password_hash,email,phone_number,registration_date,role,default_shipping_address) VALUES (?, ?, ?, ? , ?, ?, ?)', (Name, password_hash, email, phone_number, registration_date, Role,address ))
     conn.commit()
-    customer_id = cur.lastrowid
+    user_id = cur.lastrowid
     conn.close()
-    return customer_id
+    return user_id
+
+
 def update_user(users_id,username, password_hash,email,phone_number, role,default_shipping_address):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -78,6 +83,7 @@ def update_user(users_id,username, password_hash,email,phone_number, role,defaul
     conn.commit()
     conn.close()
     return get_users(id)
+
 def delete_user(user_id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -104,13 +110,13 @@ def get_customer_by_id(user_id):
 
 @app.route('/Users', methods=['POST'])
 def add_customer():
-    username = request.json['username']
-    password_hash = request.json['password_hash']
-    email = request.json['email']
-    phone_number = request.json['phone_number']
-    role = request.json['role']
-    default_shipping_address = request.json['default_shipping_address']
-    user_id = create_user(username, password_hash,email,phone_number, role,default_shipping_address)
+    Name = request.json['Name']
+    Password = request.json['Password']
+    Email = request.json['Email']
+    Phone = request.json['Phone']
+    Role = request.json['Role']
+    address = request.json['address']
+    user_id = create_user(Name, Password, Email, Phone, Role,address)
     return jsonify(get_users(user_id)), 201
 
 @app.route('/Users/<int:user_id>', methods=['PUT'])
@@ -151,6 +157,7 @@ def get_all_Categories():
         })
     conn.close()
     return final_Categories
+
 def create_Categories(name, description, parent_category_id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -159,6 +166,7 @@ def create_Categories(name, description, parent_category_id):
     conn.commit()
     conn.close()
     return "ok"
+
 def get_Categories(id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -173,12 +181,14 @@ def get_Categories(id):
         "created_at": Categorie[4],
     }
     return final_category
+
 def delete_category(id):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('DELETE FROM Categories WHERE category_id = ?', (id,))
     conn.commit()
     conn.close()
+    
 def update_category(name,description,parent_category_id,created_at,id):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -196,12 +206,14 @@ def list_Categories():
     response.headers['Access-Control-Expose-Headers'] = 'Content-Range'
     response.headers['Content-Range'] = len(Categories)
     return response
+
 @app.route('/Category/<int:id>', methods=['GET'])
 def Category(id):
     Category = get_Categories(id)
     if Category is None:
         return '', 404
     return jsonify(Category), 200
+
 @app.route('/Categories', methods=['POST'])
 def add_Categories():
     name = request.json['name']
@@ -209,10 +221,12 @@ def add_Categories():
     parent_category_id = request.json['parent_category_id']
     Categories_id = create_Categories(name, description, parent_category_id)
     return "ok", 201
+
 @app.route('/Category/<int:id>', methods=['DELETE'])
 def delete_category_by_id(id):
     delete_category(id)
     return jsonify({"id":id}), 200
+
 @app.route('/Category/<int:id>', methods=['PUT'])
 def update_category_by_id(id):
     name = request.json['name']
@@ -546,7 +560,7 @@ def get_all_feedbacks():
     for feedback in feedbacks:
         final_feedbacks.append({
             "feedback_id": feedback[0],
-            "customer_id": feedback[1],
+            "user_id": feedback[1],
             "order_id": feedback[2],
             "rating": feedback[3],
             "comment": feedback[4],
@@ -563,7 +577,7 @@ def get_feedback(id):
     conn.close()
     final_feedback = {
             "feedback_id": feedback[0],
-            "customer_id": feedback[1],
+            "user_id": feedback[1],
             "order_id": feedback[2],
             "rating": feedback[3],
             "comment": feedback[4],
@@ -571,11 +585,11 @@ def get_feedback(id):
     }
     return final_feedback
 
-def create_feedback(customer_id, order_id,rating,comment):
+def create_feedback(user_id, order_id,rating,comment):
     conn = get_db_connection()
     cur = conn.cursor()
     created_at = datetime.today().strftime('%Y-%m-%d')
-    cur.execute('INSERT INTO Feedback (customer_id, order_id,rating,comment,feedback_date) VALUES (?, ?, ?, ?,?)', (customer_id, order_id,rating,comment, created_at))
+    cur.execute('INSERT INTO Feedback (user_id, order_id,rating,comment,feedback_date) VALUES (?, ?, ?, ?,?)', (user_id, order_id,rating,comment, created_at))
     conn.commit()
     conn.close()
     return "ok"
@@ -587,10 +601,10 @@ def delete_Feedback(id):
     conn.commit()
     conn.close()
     
-def update_Feedback(customer_id, order_id,rating,comment,id):
+def update_Feedback(user_id, order_id,rating,comment,id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('UPDATE Feedback SET customer_id = ?, order_id = ?, rating = ?, comment = ? WHERE feedback_id = ?', (customer_id, order_id,rating,comment,id))
+    cur.execute('UPDATE Feedback SET user_id = ?, order_id = ?, rating = ?, comment = ? WHERE feedback_id = ?', (user_id, order_id,rating,comment,id))
     conn.commit()
     conn.close()
     return get_feedback(id)
@@ -613,13 +627,13 @@ def feedback(id):
 
 @app.route('/feedback', methods=['POST'])
 def add_feedback():
-    customer_id = request.json['customer_id']
+    user_id = request.json['user_id']
     order_id = request.json['order_id']
     rating = request.json['rating']
     comment = request.json['comment']
     if rating > 5 or rating < 1:
         return  jsonify({"error":"out of range"})
-    feedback_id = create_feedback(customer_id, order_id,rating,comment)
+    feedback_id = create_feedback(user_id, order_id,rating,comment)
     return "ok", 201
 
 @app.route('/feedback/<int:id>', methods=['DELETE'])
@@ -629,11 +643,11 @@ def delete_feedback_by_id(id):
 
 @app.route('/feedback/<int:id>', methods=['PUT'])
 def update_feedback_by_id(id):
-    customer_id = request.json['customer_id']
+    user_id = request.json['user_id']
     order_id = request.json['order_id']
     rating = request.json['rating']
     comment = request.json['comment']
-    updated = update_Feedback(customer_id, order_id,rating,comment,id)
+    updated = update_Feedback(user_id, order_id,rating,comment,id)
     return jsonify(updated), 200
 
 
@@ -649,7 +663,7 @@ def get_all_ShippingAddresses():
     for address in ShippingAddresses:
         final_ShippingAddresses.append({
             "address_id": address[0],
-            "customer_id": address[1],
+            "user_id": address[1],
             "recipient_name": address[2],
             "address_line1": address[3],
             "address_line2": address[4],
@@ -669,7 +683,7 @@ def get_ShippingAddresses(id):
     conn.close()
     final_ShippingAddresses = {
             "address_id": ShippingAddresses[0],
-            "customer_id": ShippingAddresses[1],
+            "user_id": ShippingAddresses[1],
             "recipient_name": ShippingAddresses[2],
             "address_line1": ShippingAddresses[3],
             "address_line2": ShippingAddresses[4],
@@ -680,10 +694,10 @@ def get_ShippingAddresses(id):
     }
     return final_ShippingAddresses
 
-def create_ShippingAddresses(customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country):
+def create_ShippingAddresses(user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('INSERT INTO ShippingAddresses (customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country) VALUES (?, ?, ?, ?,?, ?, ?, ?)', (customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country))
+    cur.execute('INSERT INTO ShippingAddresses (user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country) VALUES (?, ?, ?, ?,?, ?, ?, ?)', (user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country))
     conn.commit()
     conn.close()
     return "ok"
@@ -695,10 +709,10 @@ def delete_ShippingAddresses(id):
     conn.commit()
     conn.close()
 
-def update_ShippingAddresses(customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id):
+def update_ShippingAddresses(user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute('UPDATE ShippingAddresses SET customer_id = ?, recipient_name = ?, address_line1 = ?, address_line2 = ? ,city = ?, state = ?, postal_code = ?, country = ? WHERE address_id = ?', (customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id))
+    cur.execute('UPDATE ShippingAddresses SET user_id = ?, recipient_name = ?, address_line1 = ?, address_line2 = ? ,city = ?, state = ?, postal_code = ?, country = ? WHERE address_id = ?', (user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id))
     conn.commit()
     conn.close()
     return get_ShippingAddresses(id)
@@ -721,7 +735,7 @@ def one_ShippingAddresses(id):
 
 @app.route('/shipAddress', methods=['POST'])
 def add_ShippingAddresses():
-    customer_id = request.json['customer_id']
+    user_id = request.json['user_id']
     recipient_name = request.json['recipient_name']
     address_line1 = request.json['address_line1']
     address_line2 = request.json['address_line2']
@@ -729,7 +743,7 @@ def add_ShippingAddresses():
     state = request.json['state']
     postal_code = request.json['postal_code']
     country = request.json['country']
-    ShippingAddresses_id = create_ShippingAddresses(customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country)
+    ShippingAddresses_id = create_ShippingAddresses(user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country)
     return "ok", 201
 
 @app.route('/shipAddress/<int:id>', methods=['DELETE'])
@@ -739,7 +753,7 @@ def delete_ShippingAddresses_by_id(id):
 
 @app.route('/shipAddress/<int:id>', methods=['PUT'])
 def update_ShippingAddresses_by_id(id):
-    customer_id = request.json['customer_id']
+    user_id = request.json['user_id']
     recipient_name = request.json['recipient_name']
     address_line1 = request.json['address_line1']
     address_line2 = request.json['address_line2']
@@ -747,7 +761,7 @@ def update_ShippingAddresses_by_id(id):
     state = request.json['state']
     postal_code = request.json['postal_code']
     country = request.json['country']
-    updated = update_ShippingAddresses(customer_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id)
+    updated = update_ShippingAddresses(user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id)
     return jsonify(updated), 200
 
 
@@ -848,6 +862,88 @@ def update_AdminLog_by_id(id):
 
 
 #-------------------------------------------------
+
+
+#order-detail crud function
+# product
+# data = request.get_json()
+# image = request.files['image']
+
+# conn = get_db_connection()
+# img_binary = io.BytesIO(image.read())
+
+# cursor = conn.cursor()
+# cursor.execute("INSERT INTO Products (name, description, price, category_id, picture) VALUES (?, ?, ?, ?, ?)",
+# (data['name'], data['description'], data['price'], data['category_id'], img_binary.getvalue()))
+# conn.commit()
+# product_id = cursor.lastrowid
+# conn.close()
+
+# return jsonify(get_product(product_id)), 201
+
+# products
+# def get_all_products():
+#     conn = get_db_connection()
+#     cur = conn.cursor()
+#     cur.execute('SELECT * FROM Products')
+#     products = cur.fetchall()
+#     final_products = []
+#     for product in products:
+#         final_products.append({
+#             "product_id": product[0],
+#             "name": product[1],
+#             "description": product[2],
+#             "price": product[3],
+#             "category_id": product[4],
+#             "picture": product[5],
+#         })
+#     conn.close()
+#     return final_products
+# def get_product(product_id):
+#     conn = get_db_connection()
+#     cur = conn.cursor()
+#     cur.execute("SELECT * FROM Products WHERE product_id = ?", (product_id,))
+#     product = cur.fetchone()
+#     conn.close()
+#     return {
+#         'product_id': product[0],
+#         'name': product[1],
+#         'description': product[2],
+#         'price': product[3],
+#         'category_id': product[4],
+#         'picture': product[5]
+#     }
+# def create_product(name, description, price, category_id, picture):
+#     conn = get_db_connection()
+#     cur = conn.cursor()
+#     rnd = random.randint(1,50000)
+#     picture.save("./pics/"+ str(rnd) + ".jpg")
+#     picture_path = "./pics/" + str(rnd) + ".jpg"
+#     cur.execute('INSERT INTO Products (name, description,price,category_id,picture_path) VALUES (?, ?, ?, ? , ? )', (name, description, price, category_id,picture_path))
+#     conn.commit()
+#     product_id = cur.lastrowid
+#     conn.close()
+#     return product_id
+# def update_product(id,name, description, price, category_id, picture):
+# conn = get_db_connection()
+# cur = conn.cursor()
+# cur.execute('UPDATE Products SET name = ?, description = ?, price = ?, category_id = ?, picture_path = ? WHERE product_id = ?', (name, description, price, category_id, picture,id))
+# conn.commit()
+# conn.close()
+# return get_product(id)
+
+# @app.route('/Products', methods=['POST'])
+# def add_product():
+#     name = request.json['name']
+#     description = request.json['description']
+#     price = request.json['price']
+#     category_id = request.json['category_id']
+#     picture = request.files['picture']
+#     create_product(name, description, price, category_id,picture)
+#     return {'Content-Type': 'multipart/format-data'}
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
