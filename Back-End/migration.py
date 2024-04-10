@@ -42,7 +42,7 @@ if not os.path.exists(database_path):
     cur.execute('''
         CREATE TABLE Orders (
             order_id INTEGER PRIMARY KEY,
-            customer_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
             order_date DATETIME NOT NULL,
             total_amount DECIMAL(10, 2) NOT NULL,
             status VARCHAR(20) NOT NULL,
@@ -87,7 +87,7 @@ if not os.path.exists(database_path):
     cur.execute('''
         CREATE TABLE ShippingAddresses (
             address_id INTEGER PRIMARY KEY,
-            customer_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
             recipient_name VARCHAR(100) NOT NULL,
             address_line1 VARCHAR(255) NOT NULL,
             address_line2 VARCHAR(255),
@@ -102,7 +102,7 @@ if not os.path.exists(database_path):
     cur.execute('''
         CREATE TABLE Feedback (
             feedback_id INTEGER PRIMARY KEY,
-            customer_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
             order_id INTEGER NOT NULL,
             rating INT NOT NULL,
             comment TEXT,
