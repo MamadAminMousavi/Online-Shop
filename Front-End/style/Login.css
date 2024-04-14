@@ -1,0 +1,124 @@
+:root {
+    --form-bgc : #3a4468;
+    --text-color : #fff;
+}
+body {
+    background-color: #f8f9fa;
+    font-family: 'Poppins', sans-serif;
+}
+
+* {
+    margin: 0px;
+    box-sizing: border-box;
+}
+
+.contaner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    height: 100vh;
+    
+}
+
+.form-contaner {
+    display: flex;
+    position: relative;
+    /* justify-content: center; */
+    /* align-items: center; */
+}
+
+form {
+    width: 400px;
+    height: 500px;
+    background-color: var(--form-bgc);
+    border: 2px solid var(--form-bgc);
+    border-radius: 10px;
+    padding: 50px 35px 35px;
+    backdrop-filter: blur(10px);
+}
+
+.head {
+    text-align: center;
+    font-size: 32px;
+    color: var(--text-color);
+}
+
+label {
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 10px;
+    display: inline-block;
+}
+
+.user-contaner > label {
+    margin-top: 35px;
+}
+
+#user-name{
+    font-size: 14px;
+}
+
+#pass-user[placeholder="Password"]{
+    font-size: 14px;
+    color: aqua;
+}
+
+#user-name , #pass-user , #login-submit{
+    background-color: rgba(255, 255, 255, 0.07);
+    height: 50px;
+    padding: 0px 10px;
+    width: 100%;
+    font-weight: 300;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 45px;
+}
+
+#login-submit {
+    background-color: #fff;
+    padding: 15px 0px;
+    font-size: 18px;
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+.circle-1 , .circle-2 {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background-color: #fff;
+}
+
+
+/* .circle-1 {
+    margin-left: -110px;
+    margin-top: -110px;
+    background-color: #0099ffa4;
+    z-index: -1;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0; */
+    /* box-shadow: 4px 4px 4px 4px #0099ffa4; */
+/* } */
+
+/* 
+.circle-2 {
+    margin-left: 250px;
+    margin-top: 425px;
+    background-color: #ff6600b4;
+    z-index: -1;
+    position: absolute;
+    top: 0;
+    left: 0;
+} */
+
+#error_text {
+    color: red;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 10px;
+    display: none;
+}
