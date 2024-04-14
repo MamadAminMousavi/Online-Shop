@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { Create, SimpleForm, TextInput, DateInput, required } from 'react-admin';
+import { Create, SimpleForm, TextInput, DateInput, required, ReferenceInput } from 'react-admin';
 
 export const ShippingAddresses_Creat = () => (
     <Create>
         <SimpleForm>
-            <TextInput source="user_id" validate={[required()]} />
+            <ReferenceInput source="user_id" reference='Users'/>
             <TextInput source="recipient_name" multiline={true}/>
             <TextInput source="address_line1"/>
             <TextInput source="address_line2"/>

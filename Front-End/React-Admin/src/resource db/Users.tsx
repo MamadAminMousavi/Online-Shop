@@ -31,12 +31,12 @@ export const UsersList = () => (
     <List>
         <ListToolbar />
         <Datagrid rowClick="edit">
-            <TextField source="id" />
-            <TextField source="Name" />
-            <TextField source="Password" />
-            <EmailField source="Email" />
-            <TextField source="Phone" />
-            <DateField source="registration_date" />
+            <TextField disabled source="id" />
+            <TextField source="Name"/>
+            <TextField source="Password"/>
+            <EmailField source="Email"/>
+            <TextField source="Phone"/>
+            <DateField disabled source="registration_date" />
             <TextField source="Role" />
             <TextField source="address" />
         </Datagrid>

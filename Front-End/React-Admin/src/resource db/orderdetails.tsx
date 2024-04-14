@@ -33,7 +33,7 @@ export const Order_details_list = () => (
         <Datagrid rowClick="edit">
             <TextField source="id" />
             <TextField source="order_id" />
-            <TextField source="product_id" />
+            {/* <TextField source="product_id" /> */}
             <TextField source="quantity" />
             <TextField source="unit_price" />
         </Datagrid>

@@ -57,7 +57,7 @@ export const App = () => (
       name="Categories"
       list={CategoryList}
       edit={EditGuesser}
-      show={EditGuesser}
+      show={ShowGuesser}
       create={CategoryCreat}
     />
     <Resource

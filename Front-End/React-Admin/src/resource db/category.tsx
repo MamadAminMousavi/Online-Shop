@@ -11,6 +11,7 @@ import {
     SearchInput,
     EmailField,
     DateField,
+    ReferenceField
 } from 'react-admin';
 import { Stack } from '@mui/material';
 
@@ -34,7 +35,7 @@ export const CategoryList = () => (
             <TextField source="id" />
             <TextField source="name" />
             <TextField source="description" />
-            <TextField source="parent_category_id" />
+            <ReferenceField source="parent_category_id" reference="Categories" link="show" />
             <DateField source="created_at" />
         </Datagrid>
     </List>

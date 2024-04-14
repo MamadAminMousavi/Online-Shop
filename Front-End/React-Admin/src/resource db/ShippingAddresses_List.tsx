@@ -11,6 +11,7 @@ import {
     SearchInput,
     EmailField,
     DateField,
+    ReferenceField
 } from 'react-admin';
 import { Stack } from '@mui/material';
 
@@ -32,7 +33,7 @@ export const ShippingAddresses_List = () => (
         <ListToolbar />
         <Datagrid rowClick="edit">
             <TextField source="id" />
-            <TextField source="user_id" />
+            <ReferenceField source="user_id" reference="Users" link="show" />
             <TextField source="recipient_name" />
             <TextField source="address_line1" />
             <DateField source="address_line2" />

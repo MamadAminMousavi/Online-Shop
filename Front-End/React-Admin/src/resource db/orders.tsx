@@ -11,6 +11,7 @@ import {
     SearchInput,
     EmailField,
     DateField,
+    ReferenceField
 } from 'react-admin';
 import { Stack } from '@mui/material';
 
@@ -32,7 +33,7 @@ export const OrdersList = () => (
         <ListToolbar />
         <Datagrid rowClick="edit">
             <TextField source="id" />
-            <TextField source="user_id" />
+            <ReferenceField source="user_id" reference="Users" link="show" />
             <DateField source="order_date" />
             <TextField source="total_amount" />
             <TextField source="status" />

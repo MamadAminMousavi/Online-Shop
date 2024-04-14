@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { Create, SimpleForm, TextInput, DateInput, required } from 'react-admin';
+import { Create, SimpleForm, TextInput, DateInput, required ,ReferenceInput } from 'react-admin';
 
 export const OrderDetails_Creat = () => (
     <Create>
         <SimpleForm>
-            <TextInput source="order id" validate={[required()]} />
-            <TextInput source="product id" validate={[required()]} />
+            <ReferenceInput source="order_id" reference='Orders'/>
+            {/* <ReferenceInput source="product_id" reference='Products'/> */}
             <TextInput source="quantity"/>
             <TextInput source="unit_price"/>
         </SimpleForm>
