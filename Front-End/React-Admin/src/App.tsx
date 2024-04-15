@@ -9,20 +9,21 @@ import { dataProvider } from "./dataProvider";
 import { authProvider } from "./authProvider";
 import { UsersList } from "./resource db/Users";
 import { UsersCreate } from "./resource db/Userscreate";
-import { CategoryList } from "./resource db/category";
-import { CategoryCreat } from "./resource db/categoryCreat";
 import { OrdersList } from "./resource db/orders";
 import { OrderCreat } from "./resource db/orderCreate";
 import { Order_details_list } from "./resource db/orderdetails";
 import { OrderDetails_Creat } from "./resource db/OrderDetails_Create";
 import { Payment_list } from "./resource db/payments";
 import { Payment_Creat } from "./resource db/PaymentCreate";
+import { CategoryList } from "./resource db/category";
+import { CategoryCreat } from "./resource db/categoryCreat";
 import { Product_list } from "./resource db/Products";
 import { Products_Creat } from "./resource db/Products_Create";
 import { Feedback_List } from "./resource db/Feedback_list";
 import { Feedback_Creat } from "./resource db/Feedback_Create";
 import { ShippingAddresses_List } from "./resource db/ShippingAddresses_List";
 import { ShippingAddresses_Creat } from "./resource db/ShippingAddresses_Create";
+
 export const App = () => (
   <Admin dataProvider={dataProvider} authProvider={authProvider}>
     <Resource

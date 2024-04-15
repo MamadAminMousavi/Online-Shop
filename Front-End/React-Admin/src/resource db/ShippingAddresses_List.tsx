@@ -36,11 +36,11 @@ export const ShippingAddresses_List = () => (
             <ReferenceField source="user_id" reference="Users" link="show" />
             <TextField source="recipient_name" />
             <TextField source="address_line1" />
-            <DateField source="address_line2" />
-            <DateField source="city" />
-            <DateField source="state" />
-            <DateField source="postal_code" />
-            <DateField source="country" />
+            <TextField source="address_line2" />
+            <TextField source="city" />
+            <TextField source="state" />
+            <TextField source="postal_code" />
+            <TextField source="country" />
         </Datagrid>
     </List>
 );
