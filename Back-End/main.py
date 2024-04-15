@@ -238,6 +238,10 @@ def Category(id):
         return '', 404
     return jsonify(Category), 200
 
+# @app.route('/parent_categories', methods=['GET'])
+# def parent_categories():
+#     return "arr"
+
 @app.route('/Categories', methods=['POST'])
 def add_Categories():
     name = request.json['name']
@@ -969,3 +973,4 @@ def update_AdminLog_by_id(id):
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
