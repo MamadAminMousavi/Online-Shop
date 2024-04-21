@@ -2,6 +2,7 @@ from flask import Flask, jsonify , request
 import sqlite3
 from flask_cors import CORS, cross_origin
 import io
+import hashlib
 import psycopg2
 from datetime import datetime
 from fileinput import filename
@@ -15,7 +16,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Connect to the database
 def get_db_connection():
-    conn = sqlite3.connect('./Online-shop.db')
+    conn = sqlite3.connect('Online-shop.db')
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -66,6 +67,7 @@ def get_users(users_id):
     conn.close()
     return final_users
 
+
 def create_user(Name, Password, Email, Phone, Role,address ):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -76,6 +78,10 @@ def create_user(Name, Password, Email, Phone, Role,address ):
     customer_id = cur.lastrowid
     conn.close()
     return customer_id
+
+
+
+
 
 
 def update_user(id,Name, Password, Email, Phone, registration_date, Role,address):
@@ -93,18 +99,27 @@ def delete_user(user_id):
     conn.commit()
     conn.close()
 
-def login_user(user_name,Password):
+def login_user(username, Password):
     conn = get_db_connection()
     cur = conn.cursor()
-    password_hash = md5(Password.encode()).hexdigest()
-    cur.execute('SELECT * FROM Users WHERE username = ? and password_hash = ?', (user_name,password_hash,))
+    password_hash = hashlib.md5(Password.encode()).hexdigest()
+    cur.execute('SELECT * FROM Users WHERE username = ? and password_hash = ?', (username, password_hash,))
     user_data = cur.fetchone()
+    conn.close()
     if user_data:
         return "ok"
-    else : 
-        return "Erorr"
+    else:
+        return "Error"
+
 
 # users CRUD routes
+@app.route('/Users/login', methods=['POST'])
+def login_users():
+    username = request.json['username']
+    password = request.json['password']
+    response = login_user(username, password)
+    return jsonify(response)
+
 @app.route('/Users', methods=['GET'])
 def list_users():
     range = request.args.get('range')
@@ -131,9 +146,11 @@ def add_customer():
     address = request.json['address']
     user_id = create_user(name, Password, Email, Phone, Role,address)
     if user_id:
+        log_id = create_AdminLog("admin1", "create user")
         return jsonify(get_users(user_id)), 201
     else:
         return jsonify("NO")
+
 
 @app.route('/Users/<int:user_id>', methods=['PUT'])
 def update_user_by_id(user_id):
@@ -141,23 +158,18 @@ def update_user_by_id(user_id):
     Password = request.json['Password']
     Email = request.json['Email']
     Phone = request.json['Phone']
-    registration_date = request.json['registration_date']
+    registration_date = datetime.today().strftime('%Y-%m-%d %H:%M:%S')
     Role = request.json['Role']
     address = request.json['address']
     updated = update_user(user_id,name, Password, Email, Phone, registration_date, Role,address)
+    log_id = create_AdminLog("admin1", "Update User")
     return jsonify(updated), 200
 
 @app.route('/Users/<int:user_id>', methods=['DELETE'])
 def delete_user_by_id(user_id):
     delete_user(user_id)
+    log_id = create_AdminLog("admin1", "Delete User")
     return jsonify({"id":user_id}), 200
-
-@app.route('/Users/login', methods=['POST'])
-def login_users():
-    user_name = request.json['user_name']
-    password = request.json['password']
-    response = login_user(user_name, password)
-    return jsonify(response)
 
 
 #-------------------------------------------------
@@ -248,11 +260,13 @@ def add_Categories():
     description = request.json['description']
     parent_category_id = request.json['parent_category_id']
     Categories_id = create_Categories(name, description, parent_category_id)
+    log_id = create_AdminLog("admin1", "Create Categories")
     return Categories_id , 201
 
 @app.route('/Category/<int:id>', methods=['DELETE'])
 def delete_category_by_id(id):
     delete_category(id)
+    log_id = create_AdminLog("admin1", "Delete Categories")
     return jsonify({"id":id}), 200
 
 @app.route('/Category/<int:id>', methods=['PUT'])
@@ -262,6 +276,7 @@ def update_category_by_id(id):
     parent_category_id = request.json['parent_category_id']
     created_at = request.json['created_at']
     updated = update_category(name, description, parent_category_id, created_at,id)
+    log_id = create_AdminLog("admin1", "Update Categories")
     return jsonify(updated), 200
 
 
@@ -356,11 +371,13 @@ def add_order():
     total_amount = request.json['total_amount']
     status = request.json['status']
     order_id = create_order(user_id, order_date, total_amount, status)
+    log_id = create_AdminLog("admin1", "Create Order")
     return get_order(order_id), 201
 
 @app.route('/Orders/<int:order_id>', methods=['DELETE'])
 def delete_order_by_id(order_id):
     delete_order(order_id)
+    log_id = create_AdminLog("admin1", "Delete Order")
     return jsonify({"id": order_id}), 200
 
 @app.route('/Orders/<int:order_id>', methods=['PUT'])
@@ -371,6 +388,7 @@ def update_order_by_id(order_id):
     total_amount = request.json['total_amount']
     status = request.json['status']
     updated_order = update_order(order_id, user_id, order_date, total_amount, status)
+    log_id = create_AdminLog("admin1", "Update Order")
     return jsonify(updated_order), 200
 
 
@@ -458,11 +476,13 @@ def create_payment():
     payment_method = data['payment_method'] 
     amount = data['amount'] 
     result = create_one_payment(order_id, payment_method,amount)
+    log_id = create_AdminLog("admin1", "Create Payment")
     return jsonify({"message": result})
 
 @app.route('/payment/<int:id>', methods=['DELETE'])
 def delete_payment_by_id(id):
     delete_payment(id)
+    log_id = create_AdminLog("admin1", "Delete Payment")
     return jsonify({"id":id}), 200
 
 @app.route('/payment/<int:id>', methods=['PUT'])
@@ -472,6 +492,7 @@ def update_payment_by_id(id):
     payment_method = data['payment_method'] 
     amount = data['amount'] 
     updated = update_payment(order_id, payment_method, amount,id)
+    log_id = create_AdminLog("admin1", "Update Payment")
     return jsonify(updated), 200
 
 
@@ -557,11 +578,13 @@ def add_details():
     quantity = request.json['quantity']
     unit_price = request.json['unit_price']
     detail_id = create_detail(order_id, product_id, quantity,unit_price)
+    log_id = create_AdminLog("admin1", "Create Order Details")
     return get_details(detail_id), 200
 
 @app.route('/Order_Details/<int:id>', methods=['DELETE'])
 def delete_detail_by_id(id):
     delete_detail(id)
+    log_id = create_AdminLog("admin1", "Delete Order Details")
     return jsonify({"id":id}), 200
 
 @app.route('/Order_Details/<int:id>', methods=['PUT'])
@@ -571,6 +594,7 @@ def update_detail_by_id(id):
     quantity = request.json['quantity']
     unit_price = request.json['unit_price']
     updated = update_detail(order_id, product_id, quantity,unit_price,id)
+    log_id = create_AdminLog("admin1", "Update Order Details")
     return jsonify(updated), 200
 
 
@@ -660,11 +684,13 @@ def add_feedback():
     if rating > 5 or rating < 1:
         return  jsonify({"error":"out of range"})
     feedback_id = create_feedback(user_id, order_id,rating,comment)
+    log_id = create_AdminLog("admin1", "Create Feedback")
     return "ok", 201
 
 @app.route('/Feedback/<int:id>', methods=['DELETE'])
 def delete_feedback_by_id(id):
     delete_Feedback(id)
+    log_id = create_AdminLog("admin1", "Delete Feedback")
     return jsonify({"id":id}), 200
 
 @app.route('/Feedback/<int:id>', methods=['PUT'])
@@ -674,6 +700,7 @@ def update_feedback_by_id(id):
     rating = request.json['rating']
     comment = request.json['comment']
     updated = update_Feedback(user_id, order_id,rating,comment,id)
+    log_id = create_AdminLog("admin1", "Update Feedback")
     return jsonify(updated), 200
 
 
@@ -725,8 +752,9 @@ def create_ShippingAddresses(user_id, recipient_name, address_line1,address_line
     cur = conn.cursor()
     cur.execute('INSERT INTO ShippingAddresses (user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country) VALUES (?, ?, ?, ?,?, ?, ?, ?)', (user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country))
     conn.commit()
+    ship_id = cur.lastrowid
     conn.close()
-    return "ok"
+    return ship_id
 
 def delete_ShippingAddresses(id):
     conn = get_db_connection()
@@ -769,12 +797,14 @@ def add_ShippingAddresses():
     state = request.json['state']
     postal_code = request.json['postal_code']
     country = request.json['country']
-    ShippingAddresses_id = create_ShippingAddresses(user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country)
-    return "ok", 201
+    id = create_ShippingAddresses(user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country)
+    log_id = create_AdminLog("admin1", "Create ShippingAddresses")
+    return get_ShippingAddresses(id), 20
 
 @app.route('/ShippingAddresses/<int:id>', methods=['DELETE'])
 def delete_ShippingAddresses_by_id(id):
     delete_ShippingAddresses(id)
+    log_id = create_AdminLog("admin1", "Delete ShippingAddresses")
     return jsonify({"id":id}), 200
 
 @app.route('/ShippingAddresses/<int:id>', methods=['PUT'])
@@ -788,6 +818,7 @@ def update_ShippingAddresses_by_id(id):
     postal_code = request.json['postal_code']
     country = request.json['country']
     updated = update_ShippingAddresses(user_id, recipient_name, address_line1,address_line2, city, state,postal_code,country,id)
+    log_id = create_AdminLog("admin1", "Update ShippingAddresses")
     return jsonify(updated), 200
 
 
@@ -795,37 +826,6 @@ def update_ShippingAddresses_by_id(id):
 
 
 #AdminLogs crud function
-def get_all_AdminLogs():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM AdminLogs')
-    AdminLogs = cur.fetchall()
-    final_AdminLogs = []
-    for AdminLog in AdminLogs:
-        final_AdminLogs.append({
-            "category_id": AdminLog[0],
-            "name": AdminLog[1],
-            "description": AdminLog[2],
-            "parent_category_id": AdminLog[3],
-            "created_at": AdminLog[4],
-        })
-    conn.close()
-    return final_AdminLogs
-
-def get_AdminLog(id):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('SELECT * FROM AdminLogs WHERE log_id = ?',(id,))
-    AdminLog = cur.fetchone()
-    conn.close()
-    final_AdminLog = {
-        "user_id": AdminLog[0],
-        "action": AdminLog[1],
-        "action_date": AdminLog[2],
-        "ip_address": AdminLog[3]
-        }
-    return final_AdminLog
-
 def create_AdminLog(user_id, action):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -834,7 +834,25 @@ def create_AdminLog(user_id, action):
     cur.execute('INSERT INTO AdminLogs (user_id, action,action_date,ip_address) VALUES (?, ?, ?, ?)', (user_id, action, created_at,ipAddress))
     conn.commit()
     conn.close()
-    return "ok"
+    log_id = cur.lastrowid
+    return log_id
+
+def get_all_AdminLogs():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM AdminLogs')
+    AdminLogs = cur.fetchall()
+    final_AdminLogs = []
+    for AdminLog in AdminLogs:
+        final_AdminLogs.append({
+            "id": AdminLog[0],
+            "user_id": AdminLog[1],
+            "action": AdminLog[2],
+            "action_date": AdminLog[3],
+            "ip_address": AdminLog[4],
+        })
+    conn.close()
+    return final_AdminLogs
 
 def delete_AdminLog(id):
     conn = get_db_connection()
@@ -843,13 +861,7 @@ def delete_AdminLog(id):
     conn.commit()
     conn.close()
     
-def update_AdminLog(user_id, action,id):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute('UPDATE AdminLogs SET user_id = ?, action = ? WHERE log_id = ?', (user_id,action,id))
-    conn.commit()
-    conn.close()
-    return get_AdminLog(id)
+
 
 # category crud routes
 @app.route('/AdminLogs', methods=['GET'])
@@ -859,13 +871,6 @@ def list_AdminLogs():
     response.headers['Access-Control-Expose-Headers'] = 'Content-Range'
     response.headers['Content-Range'] = len(AdminLogs)
     return response
-
-@app.route('/AdminLog/<int:id>', methods=['GET'])
-def AdminLog(id):
-    AdminLog = get_AdminLog(id)
-    if AdminLog is None:
-        return '', 404
-    return jsonify(AdminLog), 200
 
 @app.route('/AdminLog', methods=['POST'])
 def add_AdminLog():
@@ -879,94 +884,117 @@ def delete_AdminLog_by_id(id):
     delete_AdminLog(id)
     return jsonify({"id":id}), 200
 
-@app.route('/AdminLog/<int:id>', methods=['PUT'])
-def update_AdminLog_by_id(id):
-    user_id = request.json['user_id']
-    action = request.json['action']
-    updated = update_AdminLog(user_id,action,id)
-    return jsonify(updated), 200
 
 
 #-------------------------------------------------
 
 
-#order-detail crud function
-# product
-# data = request.get_json()
-# image = request.files['image']
-
-# conn = get_db_connection()
-# img_binary = io.BytesIO(image.read())
-
-# cursor = conn.cursor()
-# cursor.execute("INSERT INTO Products (name, description, price, category_id, picture) VALUES (?, ?, ?, ?, ?)",
-# (data['name'], data['description'], data['price'], data['category_id'], img_binary.getvalue()))
-# conn.commit()
-# product_id = cursor.lastrowid
-# conn.close()
-
-# return jsonify(get_product(product_id)), 201
-
 # products
-# def get_all_products():
-#     conn = get_db_connection()
-#     cur = conn.cursor()
-#     cur.execute('SELECT * FROM Products')
-#     products = cur.fetchall()
-#     final_products = []
-#     for product in products:
-#         final_products.append({
-#             "product_id": product[0],
-#             "name": product[1],
-#             "description": product[2],
-#             "price": product[3],
-#             "category_id": product[4],
-#             "picture": product[5],
-#         })
-#     conn.close()
-#     return final_products
-# def get_product(product_id):
-#     conn = get_db_connection()
-#     cur = conn.cursor()
-#     cur.execute("SELECT * FROM Products WHERE product_id = ?", (product_id,))
-#     product = cur.fetchone()
-#     conn.close()
-#     return {
-#         'product_id': product[0],
-#         'name': product[1],
-#         'description': product[2],
-#         'price': product[3],
-#         'category_id': product[4],
-#         'picture': product[5]
-#     }
-# def create_product(name, description, price, category_id, picture):
-#     conn = get_db_connection()
-#     cur = conn.cursor()
-#     rnd = random.randint(1,50000)
-#     picture.save("./pics/"+ str(rnd) + ".jpg")
-#     picture_path = "./pics/" + str(rnd) + ".jpg"
-#     cur.execute('INSERT INTO Products (name, description,price,category_id,picture_path) VALUES (?, ?, ?, ? , ? )', (name, description, price, category_id,picture_path))
-#     conn.commit()
-#     product_id = cur.lastrowid
-#     conn.close()
-#     return product_id
-# def update_product(id,name, description, price, category_id, picture):
-# conn = get_db_connection()
-# cur = conn.cursor()
-# cur.execute('UPDATE Products SET name = ?, description = ?, price = ?, category_id = ?, picture_path = ? WHERE product_id = ?', (name, description, price, category_id, picture,id))
-# conn.commit()
-# conn.close()
-# return get_product(id)
+def get_all_products():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM Products')
+    products = cur.fetchall()
+    final_products = []
+    for product in products:
+        final_products.append({
+            "product_id": product[0],
+            "name": product[1],
+            "description": product[2],
+            "price": product[3],
+            "category_id": product[4],
+            "picture": product[5],
+        })
+    conn.close()
+    return final_products
 
-# @app.route('/Products', methods=['POST'])
-# def add_product():
-#     name = request.json['name']
-#     description = request.json['description']
-#     price = request.json['price']
-#     category_id = request.json['category_id']
-#     picture = request.files['picture']
-#     create_product(name, description, price, category_id,picture)
-#     return {'Content-Type': 'multipart/format-data'}
+def get_product(product_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM Products WHERE product_id = ?", (product_id,))
+    product = cur.fetchone()
+    conn.close()
+    return {
+        'product_id': product[0],
+        'name': product[1],
+        'description': product[2],
+        'price': product[3],
+        'category_id': product[4],
+        'picture': product[5]
+    }
+    
+def delete_product(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('DELETE FROM Products WHERE product_id = ?', (id,))
+    conn.commit()
+    conn.close()
+    
+def update_product(id,name, description, price, category_id, picture):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('UPDATE Products SET product_id = ?, name = ? description = ?, category_id = ? WHERE product_id = ?', (name, description, price, category_id, picture,id))
+    conn.commit()
+    conn.close()
+    return get_product(id)
+
+def create_product(name, description, price, category_id, picture):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    rnd = random.randint(1,50000)
+    picture.save("./pics/"+ str(rnd) + ".jpg")
+    picture_path = "./pics/" + str(rnd) + ".jpg"
+    cur.execute('INSERT INTO Products (name, description,price,category_id,picture_path) VALUES (?, ?, ?, ? , ? )', (name, description, price, category_id,picture_path))
+    conn.commit()
+    product_id = cur.lastrowid
+    conn.close()
+    return product_id
+
+
+#Product routes
+@app.route('/Products', methods=['GET'])
+def list_product():
+    product_result = get_all_products()
+    response = jsonify(product_result)
+    response.headers['Access-Control-Expose-Headers'] = 'Content-Range'
+    response.headers['Content-Range'] = len(product_result)
+    return response
+
+@app.route('/Products/<int:id>', methods=['GET'])
+def product(id):
+    product = get_product(id)
+    if product is None:
+        return '', 404
+    return jsonify(product), 200
+
+@app.route('/Products', methods=['POST'])
+def add_product():
+    name = request.form('name')
+    description = request.form('description')
+    price = request.form('price')
+    category_id = request.form('category_id')
+    picture = request.files('picture')
+    # create_product(name, description, price, category_id, picture)
+    print(name, description, price, category_id, picture)
+    log_id = create_AdminLog("admin1", "Create Product")
+    return "ok"
+
+@app.route('/Products/<int:id>', methods=['DELETE'])
+def delete_product_by_id(id):
+    delete_product(id)
+    log_id = create_AdminLog("admin1", "Delete Product")
+    return jsonify({"id":id}), 200
+
+@app.route('/Products/<int:id>', methods=['PUT'])
+def update_product_by_id(id):
+    product_id = request.json['product_id']
+    name = request.json['name']
+    description = request.json['description']
+    price = request.json['price']
+    category_id = request.json['price']
+    updated = update_product(product_id, name,description,price,category_id)
+    log_id = create_AdminLog("admin1", "Update Product")
+    return jsonify(updated), 200
 
 
 
