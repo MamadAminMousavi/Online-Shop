@@ -4,6 +4,8 @@ import {
   ListGuesser,
   EditGuesser,
   ShowGuesser,
+  nanoLightTheme,
+  nanoDarkTheme
 } from "react-admin";
 import { dataProvider } from "./dataProvider";
 import { authProvider } from "./authProvider";
@@ -17,15 +19,17 @@ import { Payment_list } from "./resource db/payments";
 import { Payment_Creat } from "./resource db/PaymentCreate";
 import { CategoryList } from "./resource db/category";
 import { CategoryCreat } from "./resource db/categoryCreat";
-import { Product_list } from "./resource db/Products";
-import { Products_Creat } from "./resource db/Products_Create";
 import { Feedback_List } from "./resource db/Feedback_list";
 import { Feedback_Creat } from "./resource db/Feedback_Create";
 import { ShippingAddresses_List } from "./resource db/ShippingAddresses_List";
 import { ShippingAddresses_Creat } from "./resource db/ShippingAddresses_Create";
+import { adminList } from "./resource db/adminList";
+import { Product_list } from "./resource db/Products";
+import { ProductCreate } from "./resource db/Products_Create";
 
 export const App = () => (
-  <Admin dataProvider={dataProvider} authProvider={authProvider}>
+  <Admin dataProvider={dataProvider} authProvider={authProvider} theme={nanoLightTheme} darkTheme={nanoDarkTheme}>
+
     <Resource
       name="Users"
       list={UsersList}
@@ -66,11 +70,11 @@ export const App = () => (
       list={Product_list}
       edit={EditGuesser}
       show={ShowGuesser}
-      create={Products_Creat}
+      create={ProductCreate}
     />
     <Resource
-      name="Admin Logs"
-      list={ListGuesser}
+      name="AdminLogs"
+      list={adminList}
       edit={EditGuesser}
       show={ShowGuesser}
     />

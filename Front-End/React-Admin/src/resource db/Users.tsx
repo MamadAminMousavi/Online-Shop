@@ -11,6 +11,8 @@ import {
     SearchInput,
     EmailField,
     DateField,
+    ShowButton,
+    DeleteButton
 } from 'react-admin';
 import { Stack } from '@mui/material';
 
@@ -39,6 +41,8 @@ export const UsersList = () => (
             <DateField disabled source="registration_date" />
             <TextField source="Role" />
             <TextField source="address" />
+            <ShowButton label="Show"/>
+            <DeleteButton label="Delete"/>
         </Datagrid>
     </List>
 );

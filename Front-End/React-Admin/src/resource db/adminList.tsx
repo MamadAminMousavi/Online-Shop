@@ -12,33 +12,32 @@ import {
   EmailField,
   DateField,
   ShowButton,
+  ReferenceField,
 } from "react-admin";
 import { Stack } from "@mui/material";
 
-const Order_detailsFilters = [
+const adminListFilters = [
   <SearchInput source="name" alwaysOn />,
   <TextInput label="email" source="email" defaultValue="irmrbug@gmail.com" />,
 ];
 const ListToolbar = () => (
   <Stack direction="row" justifyContent="space-between">
-    <FilterForm filters={Order_detailsFilters} />
+    <FilterForm filters={adminListFilters} />
     <div>
-      <FilterButton filters={Order_detailsFilters} />
+      <FilterButton filters={adminListFilters} />
       <CreateButton />
     </div>
   </Stack>
 );
-export const Product_list = () => (
+export const adminList = () => (
   <List>
     <ListToolbar />
     <Datagrid rowClick="edit">
       <TextField source="id" />
-      <TextField source="name" />
-      <TextField source="description" />
-      <TextField source="price" />
-      <TextField source="category_id" />
-      <TextField source="picture" />
-      <ShowButton label="show" />
+      <ReferenceField source="user_id" reference="Users" link="show" />
+      <TextField source="action" />
+      <TextField source="action_date" />
+      <TextField source="ip_address" />
     </Datagrid>
   </List>
 );
